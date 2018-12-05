@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+        .container{
+            width: 50%;
+            margin-left: 25%;
+            margin-top:10%;
+        }
+        .header-ul li {
+            float: left;
+            padding: 16px;
+        }
+        .header-ul li a {
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 700;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase.js"></script>
+    <script src="firebase_config.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <div>
+                <ul class="header-ul" style="list-style-type:none">
+                    <li><a href="userList.html">Users</a></li>
+                    <li><a href="insert.html">Add User</a></li>
+                </ul>
+            </div><br /><br /><br />
+            <my-table></my-table>
+        </div>
+    </div>
+
+    <!-- import Vue before Element -->
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <!-- import JavaScript -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="vue-tables-2.min.js"></script>
+
+    <script type="text/x-template" id="recent-donations-table">
+	<div v-loading="loading">
+		<v-client-table :columns="columns" :data="data" :options="options" v-loading="tableLoading" element-loading-text="Loading..." ref='table'>
+            <span slot="id" slot-scope="props" ><a @click="updateRow(props.row.id)">Edit</a> <a @click="deleteRow(props.row.id)" style="margin-left: 10px;">Delete</a></span>
+        </v-client-table>
+	</div>
+</script>
+
+    <script type="text/javascript">
+        Vue.use(VueTables.ClientTable);
+        const Event = VueTables.Event;
+        var recentDonation = {
+            template: '#recent-donations-table',
+            data() {
+                return {
+                    tableLoading: false,
+                    columns: ['id', 'name', 'email'],
+                    data: [],
+                    loading: true,
+                    options: {
+                        texts: {
+                            count: 'Showing {from} to {to} of {count} records|{count} records|One record',
+                            filter: 'Filter Table:',
+                            filterPlaceholder: 'Enter search text here',
+                            limit: 'Records per Page:',
+                            noResults: 'No matching records',
+                            page: 'Page:', // for dropdown pagination
+                            filterBy: 'Filter by {column}', // Placeholder for search fields when filtering by column
+                            loading: 'Loading...', // First request to server
+                            defaultOption: 'Select {column}' // default option for list filters
+                        },
+                        columnsClasses: { 'created_at': 'column-nowrap', 'id': 'column-nowrap' },
+                        headings: {
+                            id: 'ID',
+                            name: 'Name',
+                            email: 'Email',
+                        },
+                        sortable: ['id'],
+                        filterable: ["name", "email"],
+                        perPageValues: [2, 5, 15, 20],
+                        perPage: 5,
+                        customFilters: [{
+                            name: 'customFilter',
+                            callback: function (row, data) {
+
+                            }
+                        }]
+                    }
+                }
+            },
+            methods: {
+                getAllUser() {
+                    var databaseRef = firebase.database().ref('users/');
+                    databaseRef.on('value', function (snapshot) {
+                        var dataArray = [];
+                        snapshot.forEach(function (childSnapshot) {
+                            dataArray.push(childSnapshot.val());
+                        });
+                        nVue.$children[0].data = dataArray;
+                        nVue.$children[0].loading = false;
+                        console.log(dataArray)
+                    });
+                },
+                updateRow (id){
+                    window.location.href = "ile:///E:/xampp/htdocs/Js%20Training%20Examples/firebase_realtime_database_crud/update.html?id="+id;
+                },
+                deleteRow(id){
+                    firebase.database().ref().child('/users/'+ id).remove();
+                    window.location.reload();
+                }
+            },
+            created: function () {
+                this.getAllUser();
+            }
+        };
+
+        var nVue = new Vue({
+            el: '#app',
+            components: {
+                // <my-component> will only be available in parent's template
+                'my-table': recentDonation
+            },
+            data: function () {
+                return {
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
