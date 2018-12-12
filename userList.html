@@ -45,10 +45,11 @@
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="vue-tables-2.min.js"></script>
 
+ 	<!-- <a @click="updateRow(props.row.id)">Edit</a> -->
     <script type="text/x-template" id="recent-donations-table">
 	<div v-loading="loading">
 		<v-client-table :columns="columns" :data="data" :options="options" v-loading="tableLoading" element-loading-text="Loading..." ref='table'>
-            <span slot="id" slot-scope="props" ><a @click="updateRow(props.row.id)">Edit</a> <a @click="deleteRow(props.row.id)" style="margin-left: 10px;">Delete</a></span>
+            <span slot="id" slot-scope="props" > <a v-bind:href="'update.html?id='+props.row.id+''">Update</a> <a @click="deleteRow(props.row.id)" style="margin-left: 10px;">Delete</a></span>
         </v-client-table>
 	</div>
 </script>
@@ -109,7 +110,7 @@
                     });
                 },
                 updateRow (id){
-                    window.location.href = "ile:///E:/xampp/htdocs/Js%20Training%20Examples/firebase_realtime_database_crud/update.html?id="+id;
+                    window.location.href = "http://localhost/js%20Training%20Examples/firebase_realtime_database_crud/update.html?id="+id;
                 },
                 deleteRow(id){
                     firebase.database().ref().child('/users/'+ id).remove();
