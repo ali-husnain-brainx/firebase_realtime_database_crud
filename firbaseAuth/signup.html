@@ -22,18 +22,14 @@
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase.js"></script>
-    <script src="firebase_config.js"></script>
+    <script src="../firebase_config.js"></script>
 </head>
 
 <body>
     <div id="app">
         <div class="container">
-            <div>
-                <ul class="header-ul" style="list-style-type:none">
-                    <li><a href="userList.html">Users</a></li>
-                    <li><a href="insert.html">Add User</a></li>
-                </ul>
-            </div><br /><br /><br />
+            <h2>Firebase SignUp:</h2>
+            <span><a href="login.html">Login</a></span>
             <my-form></my-form>
         </div>
     </div>
@@ -46,15 +42,18 @@
     <!-- Component define -->
     <script type="text/x-template" id="new-form">
         <el-form :model="ruleForm2" status-icon :rules="rules2" ref="ruleForm2" label-width="120px" class="demo-ruleForm">
-            <el-form-item label="Name" prop="name">
-                <el-input placeholder="Enter name" v-model="ruleForm2.name" style="width:50%;"></el-input>
+            <el-form-item label="User Name" prop="username">
+                <el-input placeholder="Enter username" v-model="ruleForm2.username" style="width:50%;"></el-input>
             </el-form-item>
             <el-form-item label="Email" prop="email">
                 <el-input placeholder="Enter email" v-model="ruleForm2.email" style="width:50%;"></el-input>
             </el-form-item>
+            <el-form-item label="Password" prop="pass">
+                <el-input type="password" placeholder="Enter password" v-model="ruleForm2.pass" style="width:50%;"></el-input>
+            </el-form-item>
             <el-form-item>
-                <el-button type="primary" @click="submitForm('ruleForm2')">Save</el-button>
-                <el-button @click="resetForm('ruleForm2')">Reset</el-button>
+                <el-button type="primary" @click="submitForm('ruleForm2')">SignUp</el-button>
+                <el-button v-show="loginFlag" @click="logoutUser()">Logout</el-button>
             </el-form-item>
         </el-form>
     </script>
@@ -64,13 +63,18 @@
             template: '#new-form',
             data() {
                 return {
+                    loginFlag:false,
                     ruleForm2: {
-                        name: '',
-                        email: ''
+                        pass: '',
+                        email: '',
+                        username:''
                     },
                     rules2: {
-                        name: [
-                            { required: true, message: 'Please enter your name', trigger: 'blur' }
+                        pass: [
+                            { required: true, message: 'Please enter password', trigger: 'blur' }
+                        ],
+                        username: [
+                            { required: true, message: 'Please enter username', trigger: 'blur' }
                         ],
                         email: [
                             { required: true, message: 'Please enter your email', trigger: 'blur' }
@@ -82,7 +86,7 @@
                 submitForm(formName) {
                     this.$refs[formName].validate((valid) => {
                         if (valid) {
-                            this.saveUser(this.ruleForm2.name, this.ruleForm2.email);
+                            this.createUser(this.ruleForm2.pass, this.ruleForm2.email, this.ruleForm2.username);
                             alert('The user is created successfully!');
                         } else {
                             console.log('error submit!!');
@@ -90,40 +94,59 @@
                         }
                     });
                 },
-                saveUser(name, email) {
-                    var createTable = firebase.database().ref('users/');
-                    var databaseRef = firebase.database().ref();
-                    var uid = databaseRef.child('users').push().key;
-
-                    var data = {
-                        id: uid,
-                        name: name,
-                        email: email
-                    }
-
-                    var updates = {};
-                    updates['/users/' + uid] = data;
-                    databaseRef.update(updates);
-                },
-                resetForm(formName) {
-                    this.$refs[formName].resetFields();
-                },
                 checkRealTimeLogin(){
                     firebase.auth().onAuthStateChanged(firebaseUser=> {
                         if(firebaseUser){
                             console.log(firebaseUser);
+                            this.loginFlag = true;
+
+                            const path = window.location.pathname.replace("firbaseAuth/signup", "userList");
+                            window.location.href=path;
                         } else{
                             console.log("User Not Login");
-                            const path = window.location.pathname.replace("insert", "firbaseAuth/login");
-                            window.location.href=path;
                         }
                     });
                 },
+                createUser(pass, email,username) {
+                    const auth = firebase.auth();
+                    // const promise = auth.createUserWithEmailAndPassword(email, pass, 'Anas Baig');
+                    // promise
+                    //     .then(user=>console.log(user))
+                    //     .catch(e=>console.log(e.message));
+
+                    auth.createUserWithEmailAndPassword(email, pass).then(function(e) {
+
+                        console.log(e.user);
+
+                        e.user.updateProfile({
+                            displayName: username,
+                            photoURL: "https://example.com/jane-q-user/profile.jpg"
+                        }).then(function() {
+                            // Update successful.
+                        }).catch(function(error) {
+                            // An error happened.
+                            console.log(error);
+                        });
+
+                    }, function(error) {
+                        // Handle Errors here.
+                        var errorCode = error.code;
+                        var errorMessage = error.message;
+                        // [START_EXCLUDE]
+                        if (errorCode == 'auth/weak-password') {
+                            alert('The password is too weak.');
+                        } else {
+                            console.error(error);
+                        }
+                        // [END_EXCLUDE]
+                    });
+                },
                 logoutUser() {
+                    //this.$refs[formName].resetFields();
                     firebase.auth().signOut();
                 }
             },
-            created(){
+            created: function () {
                 this.checkRealTimeLogin();
             }
         }

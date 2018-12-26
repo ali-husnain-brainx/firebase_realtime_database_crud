@@ -21,13 +21,16 @@
             font-size: 18px;
             font-weight: 700;
         }
+        [v-cloak] {
+            display:none;
+        }
     </style>
     <script src="https://www.gstatic.com/firebasejs/5.6.0/firebase.js"></script>
     <script src="firebase_config.js"></script>
 </head>
 
 <body>
-    <div id="app">
+    <div id="app" v-cloak>
         <div class="container">
             <div>
                 <ul class="header-ul" style="list-style-type:none">
@@ -47,11 +50,13 @@
 
  	<!-- <a @click="updateRow(props.row.id)">Edit</a> -->
     <script type="text/x-template" id="recent-donations-table">
-	<div v-loading="loading">
-		<v-client-table :columns="columns" :data="data" :options="options" v-loading="tableLoading" element-loading-text="Loading..." ref='table'>
-            <span slot="id" slot-scope="props" > <a v-bind:href="'update.html?id='+props.row.id+''">Update</a> <a @click="deleteRow(props.row.id)" style="margin-left: 10px;">Delete</a></span>
-        </v-client-table>
-	</div>
+        <div v-loading="loading">
+            <el-button type="primary" style="float: right; margin-bottom: 15px;" v-show="loginFlag" @click="logoutUser()">Logout</el-button>
+            <span style="float: right; margin-top: 10px;font-weight: bold;font-size: 18px;margin-right: 5px;">{{displayName}}</span>
+            <v-client-table :columns="columns" :data="data" :options="options" v-loading="tableLoading" element-loading-text="Loading..." ref='table'>
+                <span slot="id" slot-scope="props" > <a v-bind:href="'update.html?id='+props.row.id+''">Update</a> <a @click="deleteRow(props.row.id)" style="margin-left: 10px;">Delete</a></span>
+            </v-client-table>
+        </div>
 </script>
 
     <script type="text/javascript">
@@ -61,6 +66,8 @@
             template: '#recent-donations-table',
             data() {
                 return {
+                    loginFlag:true,
+                    displayName:'',
                     tableLoading: false,
                     columns: ['id', 'name', 'email'],
                     data: [],
@@ -115,10 +122,26 @@
                 deleteRow(id){
                     firebase.database().ref().child('/users/'+ id).remove();
                     window.location.reload();
+                },
+                checkRealTimeLogin(){
+                    firebase.auth().onAuthStateChanged(firebaseUser=> {
+                        if(firebaseUser){
+                            nVue.$children[0].displayName = firebaseUser.displayName;
+                            console.log(firebaseUser);
+                        } else{
+                            console.log("User Not Login");
+                            const path = window.location.pathname.replace("userList", "firbaseAuth/login");
+                            window.location.href=path;
+                        }
+                    });
+                },
+                logoutUser() {
+                    firebase.auth().signOut();
                 }
             },
             created: function () {
                 this.getAllUser();
+                this.checkRealTimeLogin();
             }
         };
 
