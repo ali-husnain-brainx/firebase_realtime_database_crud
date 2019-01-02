@@ -29,7 +29,6 @@
     <div id="app">
         <div class="container">
             <h2>Firebase Login:</h2>
-            <span><a href="signup.html">SignUP</a></span>
             <my-form></my-form>
         </div>
     </div>
@@ -46,11 +45,13 @@
                 <el-input placeholder="Enter email" v-model="ruleForm2.email" style="width:50%;"></el-input>
             </el-form-item>
             <el-form-item label="Password" prop="pass">
-                <el-input placeholder="Enter password" v-model="ruleForm2.pass" style="width:50%;"></el-input>
+                <el-input type="password" placeholder="Enter password" v-model="ruleForm2.pass" style="width:50%;"></el-input>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="submitForm('ruleForm2')">Login</el-button>
-                <el-button v-show="loginFlag" @click="logoutUser()">Logout</el-button>
+                <el-button type="primary"><a href="signup.html" style="text-decoration: none; color:white;">Sign Up</a></el-button>
+                <el-button @click="googleSignIn()">Google SignIn</el-button>
+                <el-button @click="facebookSignIn()">Facebook SignIn</el-button>
             </el-form-item>
         </el-form>
     </script>
@@ -60,7 +61,6 @@
             template: '#new-form',
             data() {
                 return {
-                    loginFlag:false,
                     ruleForm2: {
                         pass: '',
                         email: ''
@@ -76,6 +76,28 @@
                 };
             },
             methods: {
+                facebookSignIn(){
+                    const base_provider = new firebase.auth.FacebookAuthProvider();
+                    // firebase.auth().signInWithRedirect(base_provider).then(function (result) {
+                    firebase.auth().signInWithPopup(base_provider).then(function (result) {
+                        console.log(result);
+                        console.log("Success.. Facebook Account Linked");
+                    }).catch(function (error) {
+                        console.log(error);
+                        console.log("Facebook Failed to do");
+                    })
+                },
+                googleSignIn(){
+                  const base_provider = new firebase.auth.GoogleAuthProvider();
+                  // firebase.auth().signInWithRedirect(base_provider).then(function (result) {
+                  firebase.auth().signInWithPopup(base_provider).then(function (result) {
+                     console.log(result);
+                     console.log("Success.. Google Account Linked");
+                  }).catch(function (error) {
+                      console.log(error);
+                      console.log("Failed to do");
+                  })
+                },
                 submitForm(formName) {
                     this.$refs[formName].validate((valid) => {
                         if (valid) {
@@ -91,13 +113,11 @@
                     firebase.auth().onAuthStateChanged(firebaseUser=> {
                         if(firebaseUser){
                             console.log(firebaseUser.email);
-                            this.loginFlag = true;
 
                             const path = window.location.pathname.replace("firbaseAuth/login", "userList");
                             window.location.href=path;
                         } else{
                             console.log("User Not Login");
-                            this.loginFlag = false;
                         }
                     });
                 },
@@ -105,10 +125,6 @@
                     const auth = firebase.auth();
                     const promise = auth.signInWithEmailAndPassword(email, pass);
                     promise.catch(e=>console.log(e.message));
-                },
-                logoutUser() {
-                    //this.$refs[formName].resetFields();
-                    firebase.auth().signOut();
                 }
             },
             created: function () {
